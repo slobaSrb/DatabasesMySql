@@ -1,0 +1,638 @@
+DROP DATABASE IF EXISTS svet;
+CREATE DATABASE svet;
+
+use svet;
+
+drop table if exists utakmice;
+create table utakmice (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	tim1 VARCHAR(30) NOT NULL,
+	br_golova_t1 INT NOT NULL,
+	tim2 VARCHAR(30) NOT NULL,
+	br_golova_t2 INT NOT NULL,
+	datum DATETIME NOT NULL,
+	ime_stadiona VARCHAR(30) NOT NULL,
+	grad VARCHAR(30) NOT NULL,
+	drzava VARCHAR(30) NOT NULL
+) ENGINE = INNODB;
+
+/* ubaciti fajl u wamp64 direktorijum */
+/* izgleda da ne treba 
+LOAD DATA LOCAL INFILE 'podaci2.csv'
+INTO TABLE utakmice
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '/n'
+IGNORE 1 ROWS;
+*/
+
+INSERT INTO utakmice(tim1, br_golova_t1, tim2, br_golova_t2, datum, ime_stadiona, grad, drzava) VALUES
+	("Rusija", 5, "Saudijska Arabija", 0, "2018-06-14", "Stadion Lužnjiki", "Moskva", "Rusija"),
+	("Egipat", 0, "Urugvaj", 1, "2018-06-15", "Centarlni stadion", "Jekaterinburg", "Rusija"), 
+	("Rusija", 3, "Egipat", 1, "2018-06-19", "Krestovski stadion", "Sankt Peterburg", "Rusija"),
+	("Urugvaj", 1, "Saudijska Arabija", 0, "2018-06-20", "Rostov Arena", "Rostov", "Rusija"),
+	("Urugvaj", 3, "Rusija", 0, "2018-06-25", "Kosmos Arena", "Samara", "Rusija"),
+	("Saudijska Arabija", 2, "Egipat", 1, "2018-06-25", "Volgograd Arena", "Volgograd", "Rusija"),
+	("Urugvaj", 1, "Kosta Rika", 3, "2014-06-14", "Kastelao", "Fortaleza", "Brazil"),
+	("Urugvaj", 2, "Engleska", 1, "2014-06-19", "Sao Paulo Arena", "Sao Paulo", "Brazil"),
+	("Urugvaj", 0, "Francuska", 0, "2010-06-11", "Stadion Kejp Taun", "Kejp Taun", "Južnoafrička republika"),
+	("Južnoafrička republika", 0, "Urugvaj", 3, "2010-06-16", "Stadion Loftus Vestfeld", "Pretorija", "Južnoafrička republika");
+
+
+create table drzave ( 
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	naziv_drzave VARCHAR(30) NOT NULL
+	)
+	ENGINE=INNODB 
+	AS 
+	SELECT DISTINCT 
+		drzava as naziv_drzave
+	FROM 
+		utakmice
+	UNION 
+	SELECT DISTINCT 
+		tim1 as naziv_drzave
+	FROM 
+		utakmice
+	UNION 
+	SELECT DISTINCT 
+		tim2 as naziv_drzave
+	FROM 
+		utakmice;
+		
+alter table utakmice add column(drzava_id INT NOT NULL);
+
+update utakmice
+set drzava_id = (select id from drzave where utakmice.drzava = drzave.naziv_drzave);
+
+alter table utakmice add constraint fk_drzava 
+	foreign key (drzava_id) references drzave(id) 
+		on update cascade 
+		on delete restrict;
+		
+alter table utakmice drop column drzava;
+
+/* izdvojiti tabelu gradovi i povezati je sa drzavama da se ne bi ponavljali gradovi */ 
+drop table if exists gradovi;
+create table gradovi (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	naziv_grada VARCHAR(30) NOT NULL)ENGINE=INNODB
+	AS 
+	SELECT DISTINCT 
+		grad as naziv_grada 
+	FROM 
+		utakmice;
+		
+alter table utakmice add column(grad_id INT NOT NULL);
+
+UPDATE 
+	utakmice 
+SET 
+	grad_id = (select id from gradovi where gradovi.naziv_grada = utakmice.grad);
+
+alter table utakmice add constraint fk_grad 
+	foreign key(grad_id) references gradovi(id)
+		on update cascade
+		on delete restrict;
+		
+alter table utakmice drop column grad;
+
+alter table gradovi add column (drzava_id INT NOT NULL);
+
+UPDATE 
+	gradovi 
+SET 
+	drzava_id = (select drzava_id from utakmice where utakmice.grad_id = gradovi.id);
+
+alter table gradovi add constraint fk_drzava_1 
+	foreign key(drzava_id) references drzave(id)
+		on update cascade 
+		on delete restrict;
+
+/* izdvojiti tabelu stadioni i povezati je sa gradom */ 
+drop table if exists stadioni;
+create table stadioni (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	naziv_stadiona VARCHAR(30) NOT NULL
+	)ENGINE=INNODB
+	AS 
+	SELECT DISTINCT 
+		ime_stadiona as naziv_stadiona 
+	FROM 
+		utakmice
+	ORDER BY ime_stadiona ASC
+		;
+
+alter table utakmice add column(stadion_id INT NOT NULL);
+
+update 
+	utakmice 
+set 
+	stadion_id = (select id from stadioni where stadioni.naziv_stadiona = utakmice.ime_stadiona);
+
+alter table utakmice add constraint fk_stadion 
+	foreign key(stadion_id) references stadioni(id)
+		on update cascade
+		on delete restrict;
+		
+alter table stadioni add column(grad_id int not null);
+
+UPDATE 
+	stadioni 
+SET 
+	grad_id = (select grad_id from utakmice where utakmice.stadion_id = stadioni.id);
+
+alter table stadioni add constraint fk_grad_1 
+	foreign key(grad_id) references gradovi(id)
+		on update cascade 
+		on delete restrict;
+
+alter table utakmice drop column ime_stadiona;
+
+/* dropuju se reference iz utakmice tabele za drzavu i grad, ostaje samo stadion 
+
+koji ima referencu na grad a grad ima referencu na drzavu */
+
+/* ovo cu mozda raditi ali cu ostaviti za razmisljanje */ 
+
+-- ovo ignorisem pa na kraju radim
+
+--alter table utakmice drop foreign key fk_drzava;
+
+--alter table utakmice drop column drzava_id;
+
+/* treba ostaviti id-eve timova a ukloniti imena da se ne bi ponavljali
+ i povezati ih sa tabelom drzave */
+
+alter table utakmice add column id_tim1 INT NOT NULL, add column id_tim2 INT NOT NULL;
+
+update 
+	utakmice
+set 
+	id_tim1 = (select id from drzave where utakmice.tim1 = drzave.naziv_drzave);
+	
+	
+update 
+	utakmice
+set 
+	id_tim2 = (select id from drzave where utakmice.tim2 = drzave.naziv_drzave);
+	
+	
+ALTER TABLE utakmice ADD CONSTRAINT 
+	FOREIGN KEY (id_tim1) REFERENCES drzave(id)
+		ON UPDATE CASCADE 
+		ON DELETE RESTRICT
+	;
+	
+ALTER TABLE utakmice ADD CONSTRAINT 
+	FOREIGN KEY (id_tim2) REFERENCES drzave(id)
+		ON UPDATE CASCADE 
+		ON DELETE RESTRICT
+	;
+	
+/* DROPUJEM IMENA TIMOVA RADI JEDNOSTAVNIJEG PRIKAZA */
+/* IMENA TIMOVA MOGU I OSTAVITI RADI LAKSEG PRIKAZA */
+ALTER TABLE utakmice DROP COLUMN tim1;
+
+ALTER TABLE utakmice DROP COLUMN tim2;
+
+/* sada dropujemo id utakmice i trazimo sta jedinstveno odredjuje jedan red u tabeli 
+
+a to je id tim1 , id tim2, i datum odrzavanja utakmice kao jedinstveni kljuc */ 
+
+ALTER TABLE utakmice DROP COLUMN id, ADD PRIMARY KEY(id_tim1, id_tim2, datum);
+
+
+/* DROPUJEM ID_DRZAVE, ID_GRADA, JER ID_STADIONA U TABELI UTAKMICE ODREDJUJE OBA */
+/* prvo moram foreign keys da dropujem jer oni cuvaju colone */
+
+ALTER TABLE utakmice DROP FOREIGN KEY fk_drzava;
+ALTER TABLE utakmice DROP FOREIGN KEY fk_grad;
+
+
+ALTER TABLE utakmice DROP COLUMN grad_id;
+ALTER TABLE utakmice DROP COLUMN drzava_id;
+
+/* a.	Prikazati sve države sortirane po nazivu (5 p) */
+SELECT * FROM drzave ORDER BY naziv_drzave ASC;
+
+/* b.	Prikazati sve utakmice koje su završene rezultatom 0-0. 
+		Dodatno: prikazati utakmice završene nerešenim rezultatom (5+2 p)*/ 
+select u.*, d1.naziv_drzave as tim1, d2.naziv_drzave as tim2, YEAR(u.datum) as prvenstvo  from utakmice u, drzave d1, drzave d2 where u.br_golova_t1 = 0 and u.br_golova_t2 = 0 and u.id_tim1 = d1.id and u.id_tim2 = d2.id;
+
+/* za dodatno moram da ubacim neku utakmicu sa neresenim rezultatom */ 
+
+insert into utakmice (br_golova_t1, br_golova_t2, datum, stadion_id, id_tim1, id_tim2) 
+values (2,2,NOW(),3,2,8);
+
+-- dodatni deo za pod b
+select u.*, d1.naziv_drzave as tim1, d2.naziv_drzave as tim2, YEAR(u.datum) as prvenstvo from utakmice u, drzave d1, drzave d2 where br_golova_t1 = br_golova_t2 and u.id_tim1 = d1.id and u.id_tim2 = d2.id;
+ 
+ 
+-- vracam podatke na stare
+delete from utakmice where id_tim1 = 2;
+
+/* c.	Prikazati sve države koje su na svetskom prvenstvu 2018. imale bar jednu utakmicu (6 p)*/ 
+
+select distinct d.id, d.naziv_drzave from utakmice as u, drzave as d
+where u.id_tim1 = d.id
+and u.datum between '2018-01-01' and '2018-12-31'
+union 
+select distinct d.id, d.naziv_drzave from utakmice as u, drzave as d
+where u.id_tim2 = d.id
+and u.datum between '2018-01-01' and '2018-12-31';
+
+/* d */ 
+
+/*		Izlistati sve utakmice i prikazati ih kao jednu kolonu formata: 
+		„tim1 br_golova_t1 – br_golova_t2 tim2 (datum, ime_stadiona)
+*/
+
+select CONCAT(t1.naziv_drzave, ' ', u.br_golova_t1, ' - ', u.br_golova_t2, ' ', t2.naziv_drzave, ' ( ', u.datum, s.naziv_stadiona, ' )') as utakmice
+FROM utakmice u
+INNER JOIN stadioni s ON s.id = u.stadion_id 
+INNER JOIN drzave t1 ON u.id_tim1 = t1.id
+INNER JOIN drzave t2 ON u.id_tim2 = t2.id;
+
+
+/* e */ 
+/* prikazati koliko je koja drzava imala utakmica */
+
+
+select drzava_id, drzava, sum(broj_utakmica)
+from 
+(select d.id as drzava_id, d.naziv_drzave as drzava, count(u.id_tim1) as broj_utakmica
+from drzave d, utakmice u 
+where u.id_tim1 = d.id 
+group by u.id_tim1
+
+union 
+
+select d.id as drzava_id, d.naziv_drzave as drzava, count(u.id_tim2) as broj_utakmica
+from drzave d, utakmice u 
+where u.id_tim2 = d.id 
+group by u.id_tim2
+) as query1
+group by drzava_id
+;
+
+/* f */ 
+
+/* izlistati utakmice kod kojih je kao jedna od ekipa 
+bila drzava u kojoj se nalazi stadion na kome 
+se utakmica igrala */ 
+
+-- ime ove drzave treba biti jednak imenu drzave koje je jedna od ucesnika na utakmici
+
+	SELECT 
+		t1.naziv_drzave as `naziv tim1`, 
+		u.br_golova_t1 as `broj golova tim 1`, 
+		u.br_golova_t2 as `broj golova tim 2`, 
+		t2.naziv_drzave as `naziv tim2`,
+		s.naziv_stadiona as `naziv stadiona`,
+		IF((t1.id = d.id), t1.naziv_drzave, t2.naziv_drzave) as `naziv drzave`,
+		Year(u.datum) as prvenstvo
+	FROM utakmice AS u 
+	INNER JOIN stadioni AS s ON u.stadion_id = s.id 
+	INNER JOIN gradovi AS g ON s.grad_id = g.id 
+	INNER JOIN drzave AS d ON g.drzava_id = d.id
+	INNER JOIN drzave AS t1 ON u.id_tim1 = t1.id 
+	INNER JOIN drzave AS t2 ON u.id_tim2 = t2.id
+	WHERE t1.id = d.id or t2.id = d.id;
+	
+/* g */ 
+
+-- za sve timove prikazati koji je najvisi, najnizi i prosecan broj golova koji
+-- je taj tim postigao 
+
+SELECT 
+	naziv_drzave as `naziv tima`,
+	IF(MAX(`max br. golova`) IS NULL,0,MAX(`max br. golova`)) as `najvisi br. golova`,
+	IF(MIN(`min br. golova`) IS NULL,0,MIN(`min br. golova`)) as `najnizi br. golova`,
+	IF(AVG(`avg br. golova`) IS NULL,0,AVG(`avg br. golova`)) as `prosecan br. golova`
+FROM
+(SELECT 
+	t1.id as id,
+	t1.naziv_drzave as naziv_drzave,
+	MAX(u.br_golova_t1) as `max br. golova`,
+	MIN(u.br_golova_t1) as `min br. golova`,
+	u.br_golova_t1 as `avg br. golova`,
+	u.id_tim1,
+	u.id_tim2,
+	u.datum
+FROM utakmice u 
+INNER JOIN drzave t1 ON u.id_tim1 = t1.id 
+GROUP BY u.datum,
+		u.stadion_id,
+		u.id_tim1,
+		u.id_tim2
+UNION 
+SELECT 
+	t2.id as id,
+	t2.naziv_drzave as naziv_drzave,
+	MAX(u.br_golova_t2) as `max br. golova`,
+	MIN(u.br_golova_t2) as `min br. golova`,
+	u.br_golova_t2 as `avg br. golova`,
+	u.id_tim1,
+	u.id_tim2,
+	u.datum
+FROM utakmice u 
+INNER JOIN drzave t2 ON u.id_tim2 = t2.id 
+GROUP BY u.datum, 
+		u.stadion_id,
+		u.id_tim1,
+		u.id_tim2
+) AS sq1
+GROUP BY id
+;
+
+/* h */ 
+
+-- prikazati utakmicu sa najvise golova 
+
+SELECT u.*, t1.naziv_drzave, t2.naziv_drzave, (u.br_golova_t1 + u.br_golova_t2) as `broj golova`
+FROM utakmice u
+INNER JOIN drzave AS t1 ON u.id_tim1 = t1.id 
+INNER JOIN drzave AS t2 ON u.id_tim2 = t2.id
+ORDER BY `broj golova` DESC
+LIMIT 1;
+
+/* i */ 
+
+-- prikazati timove koji su u svakoj utakmici postigli bar jedan gol. 
+
+ SELECT d.* FROM 
+ drzave d 
+ WHERE d.id NOT IN
+(
+SELECT u.id_tim1 as id_tima
+FROM 
+	utakmice u 
+WHERE u.br_golova_t1 = 0 
+UNION 
+SELECT u.id_tim2 as id_tima 
+FROM 
+	utakmice u 
+WHERE u.br_golova_t2 = 0 
+)
+AND 
+d.id in 
+(SELECT DISTINCT d.id
+FROM drzave d
+WHERE d.id in (select id_tim1 from utakmice)
+union 
+SELECT d.id
+FROM drzave d
+WHERE d.id in (select id_tim2 from utakmice)
+);
+
+/* j */ 
+-- prikazati koja drzava, koje godine je bila domacin svetskog prvenstva 
+
+SELECT DISTINCT naziv_drzave, YEAR(u.datum)
+FROM drzave d
+INNER JOIN gradovi g ON d.id = g.drzava_id
+INNER JOIN stadioni s ON g.id = s.grad_id
+INNER JOIN utakmice u ON s.id = u.stadion_id
+GROUP BY YEAR(datum);
+
+/* k */ 
+-- prikazati utakmice sa natprosecnim brojem golova za prvenstvo na kome su igrane
+
+CREATE VIEW v_prosecno_po_godini_golova AS
+SELECT AVG(u.br_golova_t1 + u.br_golova_t2) as `golovi po prvenstvu`, YEAR(u.datum) as godina
+FROM utakmice u
+GROUP BY YEAR(u.datum);
+
+
+SELECT u.br_golova_t1, u.br_golova_t2, u.datum, u.stadion_id, id_tim1, (select naziv_drzave from drzave where id = u.id_tim1) as tim1, id_tim2, (select naziv_drzave from drzave where u.id_tim2 = id) as tim2, YEAR(u.datum) as godina, d.naziv_drzave as `drzava odrzavanja`
+FROM utakmice u
+INNER JOIN v_prosecno_po_godini_golova v_p ON v_p.godina = YEAR(u.datum) 
+INNER JOIN stadioni s ON s.id = u.stadion_id 
+INNER JOIN gradovi g ON g.id = s.grad_id 
+INNER JOIN drzave d ON d.id = g.drzava_id
+WHERE v_p.`golovi po prvenstvu` < (u.br_golova_t1 + u.br_golova_t2);
+
+
+/* l */
+
+/* 		Napraviti view objekat kojim se izvršava upit koji daje broj pobeda i poraza za svaki tim na 
+		svakom od prvenstava na kome je taj tim učestvovao. Rezultat treba da bude view sa uređenom petorkom: 
+		(id_države, država, br_pobeda, br_poraza, god_svetskog_prvenstva)(5 p)
+ */ 
+
+
+CREATE VIEW sq1 AS
+SELECT 
+	t.id AS id_drzave, 
+	t.naziv_drzave AS drzava, 
+	(SELECT COUNT(*) FROM utakmice WHERE u.id_tim1 = utakmice.id_tim1 AND br_golova_t1 > br_golova_t2 AND YEAR(u.datum) = YEAR(datum)) AS br_pobeda, 
+	(SELECT COUNT(*) FROM utakmice WHERE u.id_tim1 = utakmice.id_tim1 AND br_golova_t1 < br_golova_t2 AND YEAR(u.datum) = YEAR(datum)) AS br_poraza, 
+	YEAR(u.datum) AS god_svetskog_prvenstva
+FROM utakmice u 
+INNER JOIN stadioni s ON s.id = u.stadion_id 
+INNER JOIN gradovi g ON g.id = s.grad_id 
+INNER JOIN drzave d ON d.id = g.drzava_id
+INNER JOIN drzave t ON t.id = u.id_tim1
+GROUP BY 
+		t.id,
+		YEAR(u.datum);
+		
+		
+CREATE VIEW sq2 AS
+SELECT 
+	t.id AS id_drzave, 
+	t.naziv_drzave AS drzava, 
+	(SELECT COUNT(*) FROM utakmice WHERE u.id_tim2 = utakmice.id_tim2 AND br_golova_t2 > br_golova_t1 AND YEAR(u.datum) = YEAR(datum)) AS br_pobeda, 
+	(SELECT COUNT(*) FROM utakmice WHERE u.id_tim2 = utakmice.id_tim2 AND br_golova_t2 < br_golova_t1 AND YEAR(u.datum) = YEAR(datum)) AS br_poraza, 
+	YEAR(u.datum) AS god_svetskog_prvenstva
+FROM utakmice u 
+INNER JOIN stadioni s ON s.id = u.stadion_id 
+INNER JOIN gradovi g ON g.id = s.grad_id 
+INNER JOIN drzave d ON d.id = g.drzava_id
+INNER JOIN drzave t ON t.id = u.id_tim2
+GROUP BY 
+		t.id,
+		YEAR(u.datum);
+		
+
+
+CREATE VIEW v_broj_pobeda_i_poraza AS 
+SELECT 
+	id_drzave,
+	drzava,
+	SUM(br_pobeda) as `broj_pobeda`,
+	SUM(br_poraza) as `broj_poraza`,
+	god_svetskog_prvenstva
+FROM
+	(
+SELECT * FROM sq1
+UNION
+SELECT * FROM sq2
+	) AS sq3
+	GROUP BY id_drzave,
+		god_svetskog_prvenstva
+	ORDER BY god_svetskog_prvenstva;
+
+
+/* m */
+	-- za sve utakmice prikazati one na kojima je bilo vise golova od:
+/* m 1. */ 
+	-- svih prethodnih utakmica tog prvenstva 
+	
+		
+	
+	SELECT 
+		u1.*,t1.naziv_drzave as tim1, t2.naziv_drzave as tim2, d.naziv_drzave as drzava_odrzavanja, YEAR(u1.datum) AS godina, s.naziv_stadiona
+	FROM 
+		utakmice u1
+		INNER JOIN stadioni s ON s.id = u1.stadion_id 
+		INNER JOIN gradovi g ON g.id = s.grad_id
+		INNER JOIN drzave d ON d.id = g.drzava_id
+		INNER JOIN drzave t1 ON u1.id_tim1 = t1.id 
+		INNER JOIN drzave t2 ON u1.id_tim2 = t2.id
+	WHERE 
+		(u1.br_golova_t1 + u1.br_golova_t2)	> ALL (
+			SELECT 
+				(u2.br_golova_t1 + u2.br_golova_t2) 
+			FROM 
+				utakmice u2
+			WHERE u1.datum > u2.datum AND YEAR(u1.datum) = YEAR(u2.datum)
+			ORDER BY u2.datum
+		)
+	ORDER BY u1.datum;
+	
+	
+	SELECT * FROM utakmice ORDER BY datum;
+		
+/* m */
+	-- za sve utakmice prikazati one na kojima je bilo vise golova od:
+/* m 2. */ 
+	-- bilo koje od prethodnih utakmica tog prvenstva
+		
+	SELECT 
+		u1.*,t1.naziv_drzave as tim1, t2.naziv_drzave as tim2, d.naziv_drzave as drzava_odrzavanja, YEAR(u1.datum) AS godina, s.naziv_stadiona
+	FROM 
+		utakmice u1
+		INNER JOIN stadioni s ON s.id = u1.stadion_id 
+		INNER JOIN gradovi g ON g.id = s.grad_id
+		INNER JOIN drzave d ON d.id = g.drzava_id
+		INNER JOIN drzave t1 ON u1.id_tim1 = t1.id 
+		INNER JOIN drzave t2 ON u1.id_tim2 = t2.id
+	WHERE 
+		(u1.br_golova_t1 + u1.br_golova_t2)	> ANY (
+			SELECT 
+				(u2.br_golova_t1 + u2.br_golova_t2) 
+			FROM 
+				utakmice u2
+			WHERE u1.datum > u2.datum AND YEAR(u1.datum) = YEAR(u2.datum)
+			ORDER BY u2.datum
+		)
+	ORDER BY u1.datum;
+	
+	
+	SELECT * FROM utakmice ORDER BY datum;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+/* sacuvano u slucaju da zatreba */
+/* pokusaj za m 1. */ 
+		
+	SELECT 
+		*
+	FROM 
+		utakmice u1
+		INNER JOIN stadioni s1 ON s1.id = u1.stadion_id 
+		INNER JOIN gradovi g1 ON s1.grad_id = g1.id 
+		INNER JOIN drzave d1 ON d1.id = g1.drzava_id
+	WHERE 
+		(u1.br_golova_t1 + u1.br_golova_t2)	> ALL (
+			SELECT 
+				(u2.br_golova_t1 + u2.br_golova_t2) 
+			FROM 
+				utakmice u2
+			INNER JOIN stadioni s ON s.id = u2.stadion_id 
+			INNER JOIN gradovi g ON s.grad_id = g.id 
+			INNER JOIN drzave d ON d.id = g.drzava_id
+			WHERE u1.datum > u2.datum AND d1.id = d.id
+		);
+		
+		
+	SELECT 
+		*
+	FROM 
+		utakmice u1
+		INNER JOIN stadioni s1 ON s1.id = u1.stadion_id 
+		INNER JOIN gradovi g1 ON s1.grad_id = g1.id 
+		INNER JOIN drzave d1 ON d1.id = g1.drzava_id
+	WHERE 
+		(u1.br_golova_t1 + u1.br_golova_t2)	> ALL (
+			SELECT 
+				(u2.br_golova_t1 + u2.br_golova_t2) 
+			FROM 
+				utakmice u2
+			INNER JOIN stadioni s ON s.id = u2.stadion_id 
+			INNER JOIN gradovi g ON s.grad_id = g.id 
+			INNER JOIN drzave d ON d.id = g.drzava_id
+			WHERE u1.datum > u2.datum AND d1.id = d.id
+		);
+		
+	/* drugi trazeni nacin */
+
+	SELECT 
+		u1.*, CONCAT(d1.naziv_drzave, " ", YEAR(u1.datum)) as prvenstvo
+	FROM 
+		utakmice u1
+		INNER JOIN stadioni s1 ON s1.id = u1.stadion_id 
+		INNER JOIN gradovi g1 ON s1.grad_id = g1.id 
+		INNER JOIN drzave d1 ON d1.id = g1.drzava_id
+	WHERE 
+		(u1.br_golova_t1 + u1.br_golova_t2)	> ALL (
+			SELECT 
+				(u2.br_golova_t1 + u2.br_golova_t2) 
+			FROM 
+				utakmice u2
+			WHERE u1.datum > u2.datum AND YEAR(u1.datum) = YEAR(datum)
+		)
+		ORDER BY datum;
+		
+		
+	-- bilo koje od prethodnih utakmica tog prvenstva
+		
+SELECT 
+		u1.*, CONCAT(d1.naziv_drzave, " ", YEAR(u1.datum)) as prvenstvo
+	FROM 
+		utakmice u1
+		INNER JOIN stadioni s1 ON s1.id = u1.stadion_id
+		INNER JOIN gradovi g1 ON s1.grad_id = g1.id
+		INNER JOIN drzave d1 ON d1.id = g1.drzava_id
+	WHERE 
+		(u1.br_golova_t1 + u1.br_golova_t2)	> ANY (
+		
+			SELECT 
+				(u2.br_golova_t1 + u2.br_golova_t2) 
+			FROM 
+				utakmice u2
+			WHERE u1.datum > u2.datum AND YEAR(u1.datum) = YEAR(u2.datum)
+			ORDER BY
+		)
+	ORDER BY u1.datum;

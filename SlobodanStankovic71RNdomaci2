@@ -1,0 +1,481 @@
+-- ovu tabelu rasclaniti na prihodi_rashodi koja bi imala datum od do za sifru rashoda/prihoda sa sifrom firme i sifrom priliv/odliv
+
+
+
+DROP TABLE IF EXISTS firma;
+CREATE TABLE firma(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	naziv_firme VARCHAR(30) NOT NULL,
+	adresa VARCHAR(50) NOT NULL,
+	rashodi_ostalo_mesecno INT NOT NULL,
+	rashodi_zaposljenih_mesecno INT NOT NULL,
+	prihodi_firme_mesecno BIGINT NOT NULL
+) ENGINE = INNODB;
+
+INSERT INTO firma VALUES (NULL,"Badin Soft","Nikole Pasica 28 18000 Nis",0,0,0),
+						 (NULL,"Nordeus","Mihajla Pupina 33 11000 Beograd",0,0,0),
+						 (NULL,"Microsoft","Beogradska 101 11000 Beograd",0,0,0),
+						 (NULL,"Ates Soft","Pobedina 50 18000 Nis",0,0,0),
+						 (NULL,"Niri Inteligent Computing", "Rendgenova 55 18000 Nis", 0,0,0);
+
+
+DROP TABLE IF EXISTS tip_transakcije;
+CREATE TABLE tip_transakcije(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	naziv_tipa_transakcije VARCHAR(10) NOT NULL
+) ENGINE = INNODB;
+
+INSERT INTO tip_transakcije VALUES  (NULL, "priliv"),
+									(NULL, "odliv");
+
+DROP TABLE IF EXISTS prihodi_rashodi;
+CREATE TABLE prihodi_rashodi(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	datum_transakcije DATETIME NOT NULL,
+	id_tipa_transakcije INT NOT NULL,
+	id_firme_uplatioca INT NOT NULL,
+	id_softvera INT NOT NULL,
+	opis_transakcije VARCHAR(255) NOT NULL,
+	kolicina_novca BIGINT NOT NULL,
+	id_valute INT NOT NULL
+) ENGINE = INNODB;
+
+INSERT INTO prihodi_rashodi VALUES  (NULL, NOW(), 2, 1, 1, "kupovina softverskog proizvoda", 12000, 2),
+									(NULL, NOW(), 1, 2, 2, "mesecna rata placanja za soft. proizvod", 12000, 2),
+									(NULL, NOW(), 1, 3, 3, "mesecna rata placanja za soft. proizvod", 12000, 2),
+									(NULL, NOW(), 1, 4, 4, "mesecna rata placanja za soft. proizvod", 12000, 2),
+									(NULL, NOW(), 2, 5, 1, "kupovina softverskog proizvoda", 113, 3),
+									(NULL, NOW(), 1, 2, 2, "mesecna rata placanja za soft. proizvod", 12000, 2),
+									(NULL, NOW(), 1, 4, 3, "mesecna rata placanja za soft. proizvod", 12000, 2);
+
+DROP TABLE IF EXISTS valuta;
+CREATE TABLE valuta( 
+		id INT AUTO_INCREMENT PRIMARY KEY, 
+		naziv_valute VARCHAR(20) NOT NULL,
+		oznaka_valute VARCHAR(5) NOT NULL
+)ENGINE = INNODB;
+
+INSERT INTO valuta VALUES (NULL, "Evro", "EUR"),
+					(NULL, "Srpski Dinar", "RSD"),
+					(NULL, "Americki Dolar", "USD");
+					
+/* UBACENE VALUTE */ 
+
+-- OVU TABELU MORAM DA RASCLANIM NA broj radnih sati nedeljno da bude sa datumima koji ukljucuju periode
+DROP TABLE IF EXISTS zaposljeni;
+CREATE TABLE zaposljeni(
+	jmbg BIGINT PRIMARY KEY,
+	ime VARCHAR(30) NOT NULL,
+	prezime VARCHAR(30) NOT NULL,
+	adresa VARCHAR(50) NOT NULL,
+	telefon VARCHAR(30) NOT NULL,
+	rola VARCHAR(50) NOT NULL,
+	plata INT NOT NULL,
+	datum_zaposljenja DATE NOT NULL,
+	id_tima INT NOT NULL
+)ENGINE = INNODB;
+
+INSERT INTO zaposljeni VALUES (1234567890121, "Slobodan", "Stankovic", "Sremska 16", "0659695444", "C# Software Developer", 700, NOW(), 1),
+							 (1234567890122, "Marko", "Milenkovic", "Bulevar Nemanjica 108", "0637871478", "Senior Software Developer", 2000, NOW(), 1),
+							 (1234567890123, "Nikola", "Djordjevic", "Bulevar Nemanjica 108", "0637871478", "Medior Software Developer", 2000, NOW(), 2),
+							 (1234567890124, "Nikola", "Djurovic", "Bulevar Nemanjica 108", "0637871478", "Junior Software Developer", 2000, NOW(), 2),
+							 (1234567890125, "Nemanja", "Djeric", "Bulevar Nemanjica 108", "0637871478", "Junior Software Developer", 1000, NOW(), 2);
+
+DROP TABLE IF EXISTS broj_radnih_sati;
+CREATE TABLE broj_radnih_sati(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	broj_radnih_sati_nedeljno INT NOT NULL,
+	datum_od DATE NOT NULL,
+	datum_do DATE NOT NULL,
+	jmbg_radnika BIGINT NOT NULL
+) ENGINE = INNODB;
+
+INSERT INTO broj_radnih_sati VALUES 
+							 (NULL, 40, concat(year(now())-4,"-01-01"), now(), 1234567890121),
+							 (NULL, 40, concat(year(now())-10,"-01-01"), now(), 1234567890122),
+							 (NULL, 40, concat(year(now())-5,"-01-01"), now(), 1234567890123),
+							 (NULL, 20, concat(year(now())-7,"-01-01"), now(), 1234567890124),
+							 (NULL, 20, concat(year(now())-7,"-01-01"), concat(year(now())-3,"-01-01"), 1234567890125),
+							 (NULL, 20, concat(year(now())-3,"-01-01"), now(), 1234567890125);
+							 
+							 
+/* ova tabela treba da ima posebnu tabelu za mescena placanja proizvoda od do datumi */
+DROP TABLE IF EXISTS softverski_proizvod;
+CREATE TABLE softverski_proizvod(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	naziv_softverskog_proizvoda VARCHAR(30) NOT NULL,
+	id_firme_platioca INT NOT NULL,
+	id_tima INT NOT NULL,
+	ukupna_cena_proizvoda BIGINT NOT NULL,
+	id_valute INT NOT NULL
+)ENGINE = INNODB;
+
+INSERT INTO softverski_proizvod VALUES  (NULL, "APP za kuhinju", 1, 1, 200000, 2),
+										(NULL, "APP za ucenje na daljinu", 2, 2, 1000000, 2),
+										(NULL, "APP za pravljenje sajtova", 3, 1, 3000, 1),
+										(NULL, "APP za narucivanje taxija", 4, 2, 5000, 1);
+
+/* ova tabela treba da ima radni sati tima, prihodi rashodi sa vrstom, i tabelu plate */ 
+DROP TABLE IF EXISTS timovi;
+CREATE TABLE timovi(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	naziv_tima VARCHAR(30) NOT NULL,
+	broj_clanova_tima INT NOT NULL/*,
+	nedeljni_radni_sati INT NOT NULL,
+	mesecni_radni_sati INT NOT NULL,
+	godisnji_radni_sati INT NOT NULL,
+	mesecni_prihod BIGINT NOT NULL,
+	godisnji_prihod BIGINT NOT NULL,
+	mesecne_plate BIGINT NOT NULL,
+	godisnje_plate BIGINT NOT NULL,
+	ostali_rashodi_mesecno BIGINT NOT NULL,
+	ostali_rashodi_godisnje BIGINT NOT NULL*/
+)ENGINE = INNODB;
+
+INSERT INTO timovi VALUES (NULL, "Beli Orlovi", 0);
+INSERT INTO timovi VALUES (NULL, "Lavovi", 0);
+
+/*	firma 
+	tip_transakcije
+	prihodi_rashodi
+	valuta
+	zaposljeni
+	broj_radnih_sati
+	softverski_proizvod
+	timovi
+*/
+
+/* 1) upit 
+			procedura kojom se za prosledjeni mesec i godinu vraca preko selecta
+			zarada/rashod firme u tom mesecu 
+			vratiti id firme uplatioca, softver, cenu, tip transakcije 
+*/
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS 1_domaci;
+CREATE PROCEDURE 1_domaci(godina INT, mesec INT)
+BEGIN 
+	DECLARE datum_poc DATE; 
+	DECLARE datum_kraj DATE;
+	
+	SET datum_poc = DATE(CONCAT(godina, "-", mesec, "-01"));
+	
+	IF mesec < 12 THEN 
+		SET datum_kraj = DATE(CONCAT(godina, "-", mesec+1, "-01"));
+	ELSE 
+		SET datum_kraj = DATE(CONCAT(godina+1, "-01-01"));
+	END IF;
+	
+	SELECT "MAXIMALNI PRIHOD / RASHOD";
+	
+	SELECT 
+		f.naziv_firme as `naziv firme`,
+		sp.`naziv_softverskog_proizvoda` as `naziv proizvoda`,
+		pr.datum_transakcije as `datum transakcije`,
+		MAX(pr.kolicina_novca) `maximalni iznos meseca`,
+		tt.naziv_tipa_transakcije as `tip transakcije` 
+	FROM prihodi_rashodi AS pr 
+	INNER JOIN firma AS f ON pr.id_firme_uplatioca = f.id 
+	INNER JOIN softverski_proizvod AS sp ON pr.id_softvera = sp.id 
+	INNER JOIN tip_transakcije AS tt ON pr.id_tipa_transakcije = tt.id 
+	WHERE 
+		datum_transakcije >= datum_poc AND datum_transakcije <  datum_kraj
+	GROUP BY 
+		tt.id;
+		
+		
+	SELECT "MINIMALNI PRIHOD / RASHOD";
+	SELECT 
+		f.naziv_firme as `naziv firme`,
+		sp.`naziv_softverskog_proizvoda` as `naziv proizvoda`,
+		pr.datum_transakcije as `datum transakcije`,
+		MIN(pr.kolicina_novca) `minimalni iznos meseca`,
+		tt.naziv_tipa_transakcije as `tip transakcije`
+	FROM prihodi_rashodi AS pr 
+	INNER JOIN firma AS f ON pr.id_firme_uplatioca = f.id 
+	INNER JOIN softverski_proizvod AS sp ON pr.id_softvera = sp.id 
+	INNER JOIN tip_transakcije AS tt ON pr.id_tipa_transakcije = tt.id 
+	WHERE 
+		datum_transakcije >= datum_poc AND datum_transakcije < datum_kraj
+	GROUP BY 
+		tt.id; 
+	
+END // 
+DELIMITER ;
+
+/* 2) procedura za updejt koliko ima radnika u timu */ 
+
+
+DROP PROCEDURE IF EXISTS 2_updejtuj_broj_radnika_tima;
+DELIMITER //
+CREATE PROCEDURE 2_updejtuj_broj_radnika_tima()
+BEGIN 
+		DECLARE curr_tim_id INT;
+		DECLARE broj_clanova INT;
+		DECLARE napusti_petlju INT DEFAULT 0;
+		
+		DECLARE c CURSOR FOR 
+		SELECT id FROM timovi;
+		
+		DECLARE EXIT HANDLER FOR NOT FOUND 
+		BEGIN
+			SET napusti_petlju = 1;
+			CLOSE c;
+		END;
+		
+		OPEN c;
+		
+		petlja: LOOP 
+			FETCH c INTO curr_tim_id;
+			SELECT COUNT(*) INTO broj_clanova FROM zaposljeni AS z WHERE curr_tim_id = z.id_tima;
+			UPDATE 
+				timovi t 
+			SET 
+				t.broj_clanova_tima = broj_clanova 
+			WHERE 
+				t.id = curr_tim_id; 
+				
+			IF napusti_petlju = 1 THEN
+				SET napusti_petlju = 0;
+				LEAVE petlja;
+			END IF;
+			
+		END LOOP; 
+END // 
+
+
+/* 3)
+	Proceduru sa argumentima za dodavanje novog developera u tim 
+	i sve ostalo sto je povezano sa tim 
+	
+*/
+
+
+DROP PROCEDURE IF EXISTS 2_dodaj_radnika;
+DELIMITER //
+CREATE PROCEDURE 2_dodaj_radnika(
+						IN jmbg BIGINT(20),
+						IN ime VARCHAR(30),
+						IN prezime VARCHAR(30), 
+						IN adresa VARCHAR(50),
+						IN telefon VARCHAR(30),
+						IN rola VARCHAR(50),
+						IN plata INT(11),
+						IN naziv_tima VARCHAR(30)
+						)
+BEGIN 
+	DECLARE br_radnika INT DEFAULT 0; 
+	DECLARE id_tima_pom INT DEFAULT 0; 
+	
+	SELECT COUNT(*) INTO br_radnika 
+	FROM zaposljeni AS z 
+	WHERE 
+		z.jmbg = jmbg; 
+		
+	SELECT t.id INTO id_tima_pom 
+	FROM zaposljeni AS z 
+	INNER JOIN timovi AS t ON z.id_tima = t.id 
+	WHERE t.naziv_tima = naziv_tima; 
+	
+	IF id_tima_pom = 0 THEN 
+		INSERT INTO timovi VALUES (NULL, naziv_tima, 1); 
+	ELSE 
+		UPDATE 
+			timovi AS t 
+		SET 
+			t.naziv_tima = naziv_tima 
+		WHERE 
+			t.id = id_tima_pom; 
+	END IF; 
+	
+	SELECT t.id INTO id_tima_pom FROM timovi 
+	
+	IF br_radnika = 0 THEN 
+		INSERT INTO zaposljeni VALUES (jmbg, ime, prezime, adresa, telefon, rola, plata, DATE(NOW()), id_tima_pom); 
+	ELSE 
+		SELECT "RADNIK VEC POSTOJI"; 
+	END IF; 
+
+	CALL 2_updejtuj_broj_radnika_tima(); 	
+	
+END // 
+DELIMITER ; 
+
+-- 4) funkcija za dodavanja softverskog proizvoda 
+-- polja id, naziv_proizvoda, id_firme_platioca, id_tima, ukupna_cena_proizvoda, id_valute 
+
+DROP FUNCTION IF EXISTS 2_dodaj_proizvod;
+
+DELIMITER //
+CREATE FUNCTION 2_dodaj_proizvod 
+				(
+					 naziv VARCHAR(50),
+					 naziv_firme VARCHAR(30),
+					 naziv_tima VARCHAR(30),
+					 ukupna_cena BIGINT,
+					 oznaka_valute VARCHAR(5)
+				)
+RETURNS VARCHAR(50)
+BEGIN 
+	
+	DECLARE naziv_p VARCHAR(50) DEFAULT NULL;
+	DECLARE id_firme INT DEFAULT NULL;
+	DECLARE id_tima INT DEFAULT NULL;
+	DECLARE id_valute INT DEFAULT NULL;
+	
+	SELECT naziv_softverskog_proizvoda INTO naziv_p FROM softverski_proizvod WHERE naziv_softverskog_proizvoda = naziv;
+	
+	IF naziv_p IS NOT NULL THEN 
+		RETURN "Naziv proizvoda vec postoji";
+	END IF;
+	
+	SELECT f.id INTO id_firme FROM firma f WHERE f.naziv_firme = naziv_firme;
+	
+	IF id_firme IS NULL THEN 
+		RETURN "Firma ne postoji";
+	END IF;
+	
+	SELECT t.id INTO id_tima FROM timovi t WHERE t.naziv_tima = naziv_tima;
+	
+	IF id_tima IS NULL THEN 
+		RETURN "Tim ne postoji";
+	END IF;
+	
+	SELECT v.id INTO id_valute FROM valuta v WHERE v.oznaka_valute = oznaka_valute;
+
+	IF id_valute IS NULL THEN 
+		RETURN "Valuta ne postoji";
+	END IF;
+
+	INSERT INTO softverski_proizvod VALUES (NULL, naziv, id_firme, id_tima, ukupna_cena, id_valute);
+	
+	RETURN "Ubacivanje proizvoda proslo";
+
+END //
+
+DELIMITER ;
+
+SELECT 2_dodaj_proizvod("Softver za ucenje na daljinu","Badin Soft","Neustrasivi",30000, "EUR");
+
+-- 5) prikazati ukupan broj radnih sati radnika sa jmbg 
+
+DROP PROCEDURE IF EXISTS 2_ukupan_broj_radnih_sati;
+
+DELIMITER //
+CREATE PROCEDURE 2_ukupan_broj_radnih_sati(IN jmbg BIGINT(20))
+BEGIN
+
+	DECLARE _jmbg BIGINT(20) DEFAULT NULL;
+	DECLARE _brsn INT(11) DEFAULT 0;
+	DECLARE _datum_do DATE DEFAULT NULL;
+	DECLARE _datum_od DATE DEFAULT NULL;
+	DECLARE _brsr INT(11) DEFAULT 0;
+	DECLARE napusti_petlju INT DEFAULT 0;
+	
+
+	
+	DECLARE c CURSOR FOR
+	SELECT brs.broj_radnih_sati_nedeljno, brs.datum_od, brs.datum_do
+	FROM zaposljeni z 
+	INNER JOIN broj_radnih_sati brs ON z.jmbg = brs.jmbg_radnika
+	WHERE z.jmbg = jmbg;
+	
+	DECLARE EXIT HANDLER FOR NOT FOUND 
+		BEGIN
+			SELECT _brsr AS `Ukupan broj radnih sati`;
+			SET napusti_petlju = 1;
+		END;
+	
+	OPEN c;
+	
+	petlja: LOOP
+	
+		IF napusti_petlju = 1 THEN
+				
+				SET napusti_petlju = 0;
+				LEAVE petlja;
+		END IF;
+	
+		FETCH c INTO _brsn, _datum_od, _datum_do;
+		
+		SET _brsr = _brsr + (_brsn * (TO_DAYS(_datum_do) - TO_DAYS(_datum_od)));
+		
+		
+		
+	END LOOP;
+
+	CLOSE c;
+
+
+END //
+DELIMITER ;
+
+call 2_ukupan_broj_radnih_sati(1234567890125);
+
+
+-- 6) prikazati koliko je ostalo placanja za svaki softverski proizvod 
+
+DROP PROCEDURE IF EXISTS 2_ostalo_placanja;
+
+DELIMITER //
+CREATE PROCEDURE 2_ostalo_placanja()
+BEGIN 
+	
+	DECLARE _id_softvera INT DEFAULT 0;
+	DECLARE _id_tipa_transakcije INT DEFAULT 0;
+	DECLARE _kolicina_novca INT DEFAULT 0;
+	DECLARE _id_valute INT DEFAULT 0;
+	DECLARE _ukupna_cena_rsd FLOAT DEFAULT 0;
+	DECLARE napusti_petlju INT DEFAULT 0;
+	
+	DECLARE c CURSOR FOR
+	SELECT DISTINCT pr.id_softvera
+	FROM softverski_proizvod sp 
+	INNER JOIN prihodi_rashodi pr ON sp.id = pr.id_softvera
+	INNER JOIN tip_transakcije tt ON tt.id = pr.id_tipa_transakcije
+	INNER JOIN valuta v ON sp.id_valute = v.id;
+	
+	DECLARE EXIT HANDLER FOR NOT FOUND 
+		BEGIN
+			SET napusti_petlju = 1;
+			CLOSE c;
+		END;
+		
+		
+		
+	OPEN c;
+	
+	petlja: LOOP 
+		FETCH c INTO _id_softvera;
+		IF napusti_petlju = 1 THEN
+			SET napusti_petlju = 0;
+			LEAVE petlja;
+		END IF;
+		
+		SELECT IF(sp.id_valute = (SELECT id FROM valuta WHERE oznaka_valute = "EUR"), 
+				sp.ukupna_cena_proizvoda * 120, 
+					IF(sp.id_valute = (SELECT id FROM valuta WHERE oznaka_valute = "RSD"), 
+						sp.ukupna_cena_proizvoda, 
+							IF(sp.id_valute = (SELECT id FROM valuta WHERE oznaka_valute = "USD"), 
+								sp.ukupna_cena_proizvoda * 1.13,
+									0))) INTO _ukupna_cena_rsd
+		FROM softverski_proizvod sp 
+		WHERE sp.id = _id_softvera;
+		
+		SELECT sp.naziv_softverskog_proizvoda, (_ukupna_cena_rsd - SUM(
+			IF(pr.id_valute = (SELECT id FROM valuta WHERE oznaka_valute = "EUR"), 
+				pr.kolicina_novca * 120, 
+					IF(pr.id_valute = (SELECT id FROM valuta WHERE oznaka_valute = "RSD"), 
+						pr.kolicina_novca, 
+							IF(pr.id_valute = (SELECT id FROM valuta WHERE oznaka_valute = "USD"), 
+								pr.kolicina_novca * 1.13,
+									0))))) AS `OSTALO ZA PLACANJE RSD`
+		FROM softverski_proizvod sp 
+		INNER JOIN prihodi_rashodi pr ON sp.id = pr.id_softvera
+		WHERE pr.id_softvera = _id_softvera AND pr.id_tipa_transakcije = (SELECT id FROM tip_transakcije WHERE naziv_tipa_transakcije = "priliv");
+	END LOOP; 
+END //
+DELIMITER ;
+
+
+call 2_ostalo_placanja();

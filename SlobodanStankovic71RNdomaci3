@@ -1,0 +1,449 @@
+create database apoteka;
+
+use apoteka;
+
+DROP TABLE IF EXISTS lekovi;
+CREATE TABLE lekovi(
+	id_leka INT AUTO_INCREMENT PRIMARY KEY,
+	naziv_leka VARCHAR(30) NOT NULL,
+	cena_leka INT NOT NULL,
+	gramaza VARCHAR(10) NOT NULL
+)ENGINE = INNODB;
+
+INSERT INTO lekovi VALUES 	(1, "Bromazepam", 70, "3mg"), 
+							(2, "Prilazid", 100, "50mg"),
+							(3, "Vivace", 120, "5mg"),
+							(4, "Tritace", 80, "5mg"),
+							(5, "Nevotens", 100, "5mg"),
+							(6, "Kafetin", 150, ""),
+							(7, "Cardiopirin", 75, "70mg"),
+							(8, "Andol", 150, "100mg"),
+							(9, "Amoxicilin", 100, "300mg"),
+							(10, "Pancef", 200, "625mg"),
+							(11, "Ospamox", 600, "625mg"),
+							(12, "Penacilin", 300, "300mg"),
+							(13, "Brufen", 200, "300mg");
+							
+DROP TABLE IF EXISTS role;
+CREATE TABLE role( 
+	id_role INT AUTO_INCREMENT PRIMARY KEY,
+	naziv_role VARCHAR(50) NOT NULL 
+)ENGINE = INNODB;
+
+INSERT INTO role VALUES (NULL, "Doktor Farmacije"),
+						(NULL, "Magistar Farmacije"),
+						(NULL, "Master Farmacije"),
+						(NULL, "Diplomirani Farmaceut"),
+						(NULL, "Farmaceutski tehnicar");
+
+DROP TABLE IF EXISTS radnici;
+CREATE TABLE radnici(
+	id_radnika INT AUTO_INCREMENT PRIMARY KEY, 
+	jmbg BIGINT NOT NULL, 
+	ime_prezime VARCHAR(50) NOT NULL, 
+	id_role INT NOT NULL, 
+	FOREIGN KEY (id_role) REFERENCES role(id_role) ON UPDATE CASCADE 
+											   ON DELETE RESTRICT 
+)ENGINE = INNODB;
+
+INSERT INTO radnici VALUES  (NULL, 1234567890121, "Pera Peric", 5),
+							(NULL, 1234567890122, "Mika Mikic", 1),
+							(NULL, 1234567890123, "Laza Lazic", 2),
+							(NULL, 1234567890124, "Zika Zikic", 3);
+
+DROP TABLE IF EXISTS racuni;
+CREATE TABLE racuni(
+	id_racuna INT NOT NULL,
+	jmbg BIGINT NOT NULL,
+	id_leka INT NOT NULL,
+	kolicina INT NOT NULL,
+	datum_vreme DATETIME NOT NULL,
+	PRIMARY KEY(id_racuna, jmbg, id_leka)
+)ENGINE = INNODB;
+
+/* DROP TABLE IF EXISTS racun_radnik;
+CREATE TABLE racun_radnik(
+	id_racuna INT NOT NULL,
+	jmbg BIGINT NOT NULL
+)ENGINE = INNODB;
+*/
+
+INSERT INTO racuni VALUES (1, 1234567890121, 1, 2, NOW()),
+						  (1, 1234567890121, 2, 2, NOW()),
+						  (1, 1234567890121, 3, 1, NOW()),
+						  (1, 1234567890121, 4, 1, NOW()),
+						  (2, 1234567890122, 5, 2, NOW()),
+						  (2, 1234567890122, 6, 3, NOW()),
+						  (2, 1234567890122, 7, 2, NOW()),
+						  (3, 1234567890123, 1, 2, NOW()),
+						  (3, 1234567890123, 3, 2, NOW()),
+						  (3, 1234567890123, 5, 3, NOW()),
+						  (3, 1234567890123, 7, 2, NOW()),
+						  (4, 1234567890124, 2, 3, NOW()),
+						  (4, 1234567890124, 4, 2, NOW()),
+						  (4, 1234567890124, 6, 2, NOW()),
+						  (4, 1234567890124, 8, 4, NOW());
+						  
+-- FUNKCIJA ZA UBACIVANJE KUPLJENOG ARTIKLA U RACUN 
+
+/* DROP PROCEDURE IF EXISTS ubaci_artikal;
+DELIMITER //
+CREATE PROCEDURE IF EXISTS ubaci_artikal(IN id_racuna INT,IN id_leka INT,IN kolicina INT)
+BEGIN 
+	INSERT INTO racuni VALUES (id_racuna, id_leka, kolicina);
+END //
+DELIMITER ; */
+
+DROP TABLE IF EXISTS radnik_mesecni_promet;
+CREATE TABLE radnik_mesecni_promet(
+	jmbg BIGINT NOT NULL,
+	mesec INT NOT NULL,
+	godina INT NOT NULL,
+	promet_dinara BIGINT NOT NULL,
+	PRIMARY KEY(jmbg, mesec, godina)
+)ENGINE = INNODB;
+
+-- 1) EVENT KOJI UPISUJE MESECNI PROMET SVAKOG MESECA ZA SVAKOG RADNIKA (ne znam da li radi)
+
+DROP EVENT IF EXISTS e_mesecni_promet; 
+DELIMITER // 
+
+CREATE EVENT e_mesecni_promet 
+ON SCHEDULE EVERY 1 MONTH 
+STARTS (TIMESTAMP(CURRENT_DATE) + INTERVAL 1 SECOND)
+DO 
+BEGIN 
+	DECLARE c_jmbg BIGINT DEFAULT 0; 
+	DECLARE c_id_leka INT DEFAULT 0; 
+	DECLARE godina INT DEFAULT 0; 
+	DECLARE mesec INT DEFAULT 0; 
+	DECLARE promet_dinara INT DEFAULT 0; 
+	DECLARE tren_poruka_br INT DEFAULT 0; 
+	DECLARE odabrana_poruka_br INT DEFAULT 0; 
+	DECLARE c_kolicina INT DEFAULT 0; 
+	DECLARE napusti_petlju INT DEFAULT 0; 
+
+	DECLARE c CURSOR FOR 
+	SELECT 
+		jmbg, id_leka, kolicina 
+	FROM 
+		racuni 
+	WHERE 
+		MONTH(datum_vreme) = MONTH(NOW()); 
+	
+	DECLARE EXIT HANDLER FOR NOT FOUND 
+	BEGIN 
+		SET napusti_petlju = 1; 
+		CLOSE c; 
+	END; 
+	
+	OPEN c; 
+	
+	petlja: LOOP 
+		FETCH c INTO c_jmbg, c_id_leka, c_kolicina; 
+		
+		IF napusti_petlju THEN 
+			LEAVE petlja; 
+		END IF;	
+		
+		(SELECT jmbg FROM radnik_mesecni_promet AS rmp WHERE c_jmbg = jmbg AND MONTH(NOW()) = rmp.mesec AND YEAR(NOW()) = rmp.godina); 
+		
+		SET promet_dinara = (SELECT cena_leka FROM lekovi WHERE id_leka = c_id_leka) * c_kolicina; 
+		
+		INSERT INTO radnik_mesecni_promet VALUES (c_jmbg, MONTH(NOW()), YEAR(NOW()), promet_dinara); 
+		
+	END LOOP; 
+	
+	
+END // 
+
+DELIMITER ; 
+
+
+
+-- 2) TRIGGER KOJI UPISUJE DOSADASNJI PROMET RADNIKA (ne radi)
+DROP TRIGGER IF EXISTS dosadasnji_promet_radnika; 
+
+DELIMITER // 
+
+CREATE TRIGGER dosadasnji_promet_radnika 
+AFTER INSERT ON racuni 
+FOR EACH ROW 
+BEGIN 
+	DECLARE promet_dinara_pom INT DEFAULT 0; 
+	DECLARE mesecni_promet_radnika_pom INT DEFAULT 0; 
+	(SELECT promet_dinara INTO promet_dinara_pom FROM radnik_mesecni_promet WHERE jmbg = NEW.jmbg AND mesec = MONTH(NOW()) AND godina = YEAR(NOW())); 
+
+	IF promet_dinara_pom IS NULL THEN 
+		INSERT INTO radnik_mesecni_promet VALUES (NEW.jmbg, MONTH(NOW()), YEAR(NOW()), (NEW.id_leka * NEW.kolicina)); 
+	ELSE 
+		UPDATE 
+			radnik_mesecni_promet 
+		SET 
+			promet_dinara = promet_dinara_pom + (NEW.id_leka * NEW.kolicina) 
+		WHERE 
+			jmbg = NEW.jmbg AND mesec = MONTH(NOW()) AND godina = YEAR(NOW()); 
+	END IF; 
+END // 
+
+DELIMITER ; 
+
+
+DROP TABLE IF EXISTS log_racuna;
+CREATE TABLE log_racuna(
+	id_racuna INT NOT NULL PRIMARY KEY,
+	ime_prezime_radnika VARCHAR(50) NOT NULL,
+	lekovi VARCHAR(255) NOT NULL, 
+	kolicina VARCHAR(255) NOT NULL,
+	cene VARCHAR(255) NOT NULL,
+	saldo INT NOT NULL
+) ENGINE = INNODB;
+
+INSERT INTO racuni VALUES (5, 1234567890124, 2, 4, NOW()),
+						  (5, 1234567890124, 3, 5, NOW()),
+						  (5, 1234567890124, 4, 3, NOW());
+
+-- 3) TRIGGER KOJI NA UPISIVANJE U TABELU RACUN LOGUJE RACUN KAO ID_RACUNA, IME PREZIME RADNIKA, LEKOVI , KOLICINA, I SALDO 
+-- (ne radi, ali izgled korektno)
+DROP TRIGGER IF EXISTS t_log_racuna_ai; 
+DELIMITER // 
+
+CREATE TRIGGER t_log_racuna_ai 
+AFTER INSERT ON racuni 
+FOR EACH ROW 
+BEGIN 
+	DECLARE id_racuna_pom INT DEFAULT 0; 
+	DECLARE ime_prezime_pom VARCHAR(50) DEFAULT ""; 
+	DECLARE naziv_leka_pom VARCHAR(30) DEFAULT ""; 
+	DECLARE cena_leka_pom INT DEFAULT 0;
+
+	SELECT id_racuna INTO id_racuna_pom FROM log_racuna WHERE NEW.id_racuna = id_racuna;
+	SELECT ime_prezime INTO ime_prezime_pom FROM radnici WHERE NEW.jmbg = jmbg;
+	SELECT naziv_leka INTO naziv_leka_pom FROM lekovi WHERE NEW.id_leka = id_leka;
+	SELECT cena_leka INTO cena_leka_pom FROM lekovi WHERE NEW.id_leka = id_leka;
+
+	IF id_racuna_pom IS NULL THEN 
+		INSERT INTO log_racuna 
+		VALUES 
+		(
+		NEW.id_racuna, 
+		ime_prezime_pom,
+		naziv_leka_pom,
+		NEW.kolicina,
+		cena_leka_pom,
+		cena_leka_pom*NEW.kolicina
+		); 
+	ELSE 
+		UPDATE 
+			log_racuna 
+		SET 
+			lekovi = CONCAT(lekovi, " ", naziv_leka_pom), 
+			kolicina = CONCAT(kolicina, " ", NEW.kolicina), 
+			cene = CONCAT(cene, " ", cena_leka_pom), 
+			saldo = saldo + cena_leka_pom 
+		WHERE 
+			id_racuna = NEW.id_racuna;
+	END IF;
+	
+END //
+DELIMITER ;
+	
+
+-- 4) TRIGGER KOJI NA BRISANJE IZ RACUNA LOGUJE TE RACUNE U POSEBNU LOG TABELU (ovo radi)
+DROP TABLE IF EXISTS obrisani_racuni;
+CREATE TABLE obrisani_racuni(
+	id_racuna INT,
+	id_leka INT NOT NULL,
+	naziv_leka VARCHAR(50) NOT NULL,
+	kolicina INT NOT NULL,
+	datum_vreme DATETIME NOT NULL,
+	PRIMARY KEY(id_racuna, id_leka)
+)ENGINE = INNODB; 
+
+DROP PROCEDURE IF EXISTS unesi_obrisani_racun;
+DELIMITER //
+CREATE PROCEDURE unesi_obrisani_racun(IN id_racuna INT, IN id_leka INT,IN naziv_leka VARCHAR(50),IN kolicina INT,IN datum_vreme DATETIME) 
+BEGIN 
+	INSERT INTO obrisani_racuni VALUES (id_racuna, id_leka, naziv_leka, kolicina, datum_vreme);
+END //
+DELIMITER ;
+
+DROP TRIGGER IF EXISTS t_obrisani_racuni_bd; 
+DELIMITER // 
+CREATE TRIGGER t_obrisani_racuni_bd 
+BEFORE DELETE ON racuni 
+FOR EACH ROW 
+BEGIN 
+	
+	DECLARE naziv_leka_pom VARCHAR(50) DEFAULT NULL;
+	
+	SELECT naziv_leka INTO naziv_leka_pom FROM lekovi WHERE id_leka = OLD.id_leka;
+	
+	CALL unesi_obrisani_racun (OLD.id_racuna, OLD.id_leka, naziv_leka_pom, OLD.kolicina, OLD.datum_vreme);
+	
+END //
+DELIMITER ;
+
+DELETE FROM racuni WHERE id_racuna = 5;
+
+
+DROP TABLE IF EXISTS prodati_lekovi;
+CREATE TABLE prodati_lekovi(
+	id_leka INT NOT NULL,
+	id_racuna INT NOT NULL,
+	kolicina INT NOT NULL,
+	mesec INT NOT NULL,
+	godina INT NOT NULL,
+	PRIMARY KEY(id_leka, id_racuna, mesec, godina)
+);
+
+-- 5) TRIGGER KOJI UPISUJE KOLIKO JE KOLICINE LEKOVA PRODATO PA RACUNA I KOLIKO BI TREBALO NABAVITI ZA SLEDECI MESEC 
+-- (ovo radi)
+DROP TRIGGER IF EXISTS t_kolicina_lekova_bi;
+
+DELIMITER // 
+CREATE TRIGGER t_kolicina_lekova_bi 
+BEFORE INSERT ON racuni 
+FOR EACH ROW 
+BEGIN 
+
+	INSERT INTO prodati_lekovi VALUES (NEW.id_leka, NEW.id_racuna, NEW.kolicina, MONTH(NOW()), YEAR(NOW())); 
+	
+END // 
+DELIMITER ; 
+
+
+-- 6) event koji brise starije racune od jedne godine (ne radi iz nekog razloga)
+DROP EVENT IF EXISTS e_obrisi_racune_stare_1_god;
+DELIMITER // 
+
+CREATE EVENT e_obrisi_racune_stare_1_god 
+ON SCHEDULE 
+EVERY 1 YEAR
+STARTS TIMESTAMP(CURRENT_DATE) 
+DO 
+BEGIN 
+	DELETE FROM racuni WHERE datum_vreme < DATE_SUB(NOW(), INTERVAL 1 YEAR); 
+END //
+
+DELIMITER ;
+
+insert into racuni values (5, 1234567890124, 3, 5, DATE_SUB(NOW(), INTERVAL 1 YEAR));
+
+-- 7) EVENT KOJIM SE STAVLJAJU U TABELU kolicine_lekovi, koliko se lekova proda na mesecnom nivou (ne radi ali mislim da je korektno)
+DROP TABLE IF EXISTS kolicine_lekovi;
+CREATE TABLE kolicine_lekovi(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	id_leka INT NOT NULL,
+	naziv_leka VARCHAR(50) NOT NULL,
+	kolicina INT NOT NULL
+)ENGINE = INNODB; 
+
+
+DROP EVENT IF EXISTS e_kolicine_lekovi; 
+DELIMITER // 
+CREATE EVENT e_kolicine_lekovi 
+ON SCHEDULE 
+EVERY 1 MONTH
+STARTS (TIMESTAMP(CURRENT_DATE) + INTERVAL 1 MONTH)
+DO 
+BEGIN 
+	DELETE FROM kolicine_lekovi; 
+	
+	INSERT INTO kolicine_lekovi
+	SELECT null, r.id_leka, l.naziv_leka, SUM(r.kolicina)
+	FROM racuni r
+	INNER JOIN lekovi l ON l.id_leka = r.id_leka
+	WHERE MONTH(r.datum_vreme) = MONTH(NOW()) AND YEAR(r.datum_vreme) = YEAR(NOW())
+	GROUP BY id_leka
+	ORDER BY SUM(kolicina) DESC; 
+	
+END // 
+DELIMITER ; 
+
+-- event koji svaki dan upisuje za prepodnevnu smenu, kao i za popodnevnu, dnevni pazar koji je radnik napravio.
+DROP TABLE IF EXISTS pazar_po_smenama;
+CREATE TABLE pazar_po_smenama(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	jmbg BIGINT NOT NULL,
+	ime_prezime VARCHAR(50),
+	datum DATETIME NOT NULL, 
+	smena INT NOT NULL,
+	pazar INT NOT NULL
+) ENGINE = INNODB;
+
+
+
+DROP EVENT IF EXISTS e_pazar_po_smenama;
+
+DELIMITER //
+CREATE EVENT e_pazar_po_smenama 
+ON SCHEDULE EVERY 8 HOUR
+DO
+BEGIN 
+	DECLARE _napusti_petlju INT DEFAULT 0;
+	DECLARE _jmbg BIGINT DEFAULT 0;
+	DECLARE _ime_prezime VARCHAR(50) DEFAULT '';
+	DECLARE _pazar_u_smeni_radnika INT DEFAULT 0;
+	DECLARE _id_leka INT DEFAULT 0;
+	DECLARE _kolicina INT DEFAULT 0;
+	DECLARE _datum_vreme DATETIME;
+
+	DECLARE c CURSOR FOR SELECT jmbg, ime_prezime FROM radnici;
+	
+	DECLARE EXIT HANDLER FOR NOT FOUND 
+		BEGIN
+			SET _napusti_petlju = 1;
+			CLOSE c;
+		END;
+	
+	
+	OPEN c;
+	petlja: WHILE TRUE DO 
+		FETCH c INTO _jmbg, _ime_prezime;
+		IF _napusti_petlju THEN 
+			LEAVE petlja;
+		END IF;
+		
+		-- view u kojem se smestaju id_leka i kolicina za jmbg u odredjenoj smeni
+		
+		SELECT SUM(l.cena_leka * r.kolicina), r.datum_vreme INTO _pazar_u_smeni_radnika, _datum_vreme
+		FROM racuni AS r 
+		INNER JOIN lekovi AS l ON l.id_leka = r.id_leka 
+		WHERE r.jmbg = _jmbg 
+		AND DATE(r.datum_vreme) = DATE(NOW()) 
+		AND DATE_SUB(NOW(), INTERVAL 8 HOUR) < r.datum_vreme 
+		AND NOW() >= r.datum_vreme; 
+		
+		INSERT INTO pazar_po_smenama VALUES (NULL, _jmbg, _ime_prezime, _datum_vreme, (HOUR(_datum_vreme) div 8), _pazar_u_smeni_radnika);
+		
+	END WHILE;
+	
+END //
+DELIMITER ;
+--	SELECT naziv_leka, cena_leka FROM lekovi WHERE id_leka in (SELECT id_leka FROM racuni WHERE jmbg = NEW.jmbg AND id_racuna = NEW.id_racuna); 
+
+/*	
+	DECLARE CURSOR c1 FOR 
+	SELECT 
+		r.id_racuna, 
+		ra.ime_prezime, 
+		l.naziv_leka, 
+		l.cena_leka, 
+		r.kolicina, 
+		SUM(l.cena_leka * r.kolicina) 
+	FROM lekovi AS l 
+	INNER JOIN racuni AS r ON l.id_leka = r.id_leka 
+	INNER JOIN radnici AS ra ON ra.jmbg = r.jmbg 
+	GROUP BY r.id_racuna, 
+			l.id_leka; 
+
+	OPEN c;
+	
+	petlja: WHILE TRUE DO
+		FETCH c1 INTO 
+
+	END WHILE;
+	
+	CLOSE c;
+*/
