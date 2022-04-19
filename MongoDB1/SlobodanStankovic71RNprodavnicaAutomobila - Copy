@@ -1,0 +1,402 @@
+db.dropDatabase();
+use polovni_automobili;
+db.polovni_automobili.insertMany([
+	{
+		"marka":"Citroen",
+		"model":"C3",
+		"cena" : 2300,
+		"ccm" : 1100,
+		"godiste": 2003,
+		"stanje":"polovno",
+		"kilometraza": 144387,
+		"gorivo": "benzin",
+		"snaga": 73,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"zelena"
+	},
+		{
+		"marka":"Mercedes",
+		"model":"C200",
+		"cena": 10000,
+		"ccm" : 2000,
+		"godiste": 2010,
+		"stanje":"polovno",
+		"kilometraza": 100217,
+		"gorivo": "dizel",
+		"snaga": 187,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"siva"
+	},
+		{
+		"marka":"BMW",
+		"model":"M4",
+		"cena" : 230000,
+		"ccm" : 4000,
+		"godiste": 2021,
+		"stanje":"novo",
+		"kilometraza": 0,
+		"gorivo": "dizel",
+		"snaga": 550,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"tirkizna"
+	},
+		{
+		"marka":"Mazda",
+		"model":"3",
+		"cena" : 4300,
+		"ccm" : 1600,
+		"godiste": 2008,
+		"stanje":"polovno",
+		"kilometraza": 155220,
+		"gorivo": "dizel",
+		"snaga": 110,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"siva"
+	},
+		{
+		"marka":"KIA",
+		"model":"Sorento",
+		"cena" : 3500,
+		"ccm" : 1300,
+		"godiste": 2005,
+		"stanje":"polovno",
+		"kilometraza": 140332,
+		"gorivo": "benzin",
+		"snaga": 85,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"crvena"
+	},
+	{
+		"marka":"Mercedes",
+		"model":"A180",
+		"cena" : 2100,
+		"ccm" : 1800,
+		"godiste": 2003,
+		"stanje":"polovno",
+		"kilometraza": 160034,
+		"gorivo": "dizel",
+		"snaga": 65,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"crna"
+	},
+	{
+		"marka":"Citroen",
+		"model":"C5",
+		"cena" : 3400,
+		"ccm" : 2200,
+		"godiste": 2005,
+		"stanje":"polovno",
+		"kilometraza": 120113,
+		"gorivo": "dizel",
+		"snaga": 130,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"zelena"
+	},
+	{
+		"marka":"BMW",
+		"model":"d220",
+		"cena" : 13000,
+		"ccm" : 2200,
+		"godiste": 2010,
+		"stanje":"polovno",
+		"kilometraza": 132038,
+		"gorivo": "dizel",
+		"snaga": 177,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"crna"
+	},
+	{
+		"marka":"BMW",
+		"model":"d520",
+		"cena" : 160000,
+		"ccm" : 4200,
+		"godiste": 2021,
+		"stanje":"novo",
+		"kilometraza": 0,
+		"gorivo": "dizel",
+		"snaga": 530,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"bela"
+	},
+	{
+		"marka":"BMW",
+		"model":"d180",
+		"cena" : 10000,
+		"ccm" : 1800,
+		"godiste": 2010,
+		"stanje":"polovno",
+		"kilometraza": 150000,
+		"gorivo": "dizel",
+		"snaga": 140,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"zelena"
+	},
+	{
+		"marka":"Peugeot",
+		"model":"208gt",
+		"cena" : 5000,
+		"ccm" : 2000,
+		"godiste": 2010,
+		"stanje":"polovno",
+		"kilometraza": 20000,
+		"gorivo": "dizel",
+		"snaga": 200,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"zelena"
+	},
+	{
+		"marka":"Maserati",
+		"model":"Quattroporte",
+		"cena" : 45000,
+		"ccm" : 3800,
+		"godiste": 2013,
+		"stanje":"polovno",
+		"kilometraza": 120000,
+		"gorivo": "benzin",
+		"snaga": 530,
+		"broj vrata": "4/5",
+		"broj sedista": 4,
+		"ostecenja":"neostecen",
+		"boja":"crvena"
+	},
+	{
+		"marka":"Maserati",
+		"model":"Quattroporte",
+		"cena" : 45000,
+		"ccm" : 3800,
+		"godiste": 2013,
+		"stanje":"polovno",
+		"kilometraza": 120000,
+		"gorivo": "benzin",
+		"snaga": 530,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"crvena"
+	},
+	{
+		"marka":"Maserati",
+		"model":"Ghibli",
+		"cena" : 33000,
+		"ccm" : 3800,
+		"godiste": 2016,
+		"stanje":"polovno",
+		"kilometraza": 150000,
+		"gorivo": "benzin",
+		"snaga": 270,
+		"broj vrata": "4/5",
+		"broj sedista": 4,
+		"ostecenja":"neostecen",
+		"boja":"crvena"
+	}
+]);
+
+// 1) find pronaci sve automobile tipa citroen koji su stari od 2003 do 2007 izmedju 1500 i 3500 evra 
+
+db.polovni_automobili.find({"marka":"Citroen", "godiste": {$gt: 2003, $lt: 2008}, "cena": {$gt: 1500, $lt: 3500}});
+db.polovni_automobili.find({marka: "Citroen"});
+
+// 2) update updatovati sve mercedes automobile u mercedes-benz 
+
+db.polovni_automobili.find({marka: "Mercedes"});
+
+db.polovni_automobili.updateMany(
+      { marka: "Mercedes" },
+      { $set: { marka : "Mercedes Benz" } }
+   );
+   
+db.polovni_automobili.find({marka: "Mercedes Benz"});
+
+// 3) find pronaci sve koji pocinju sa mercedes i godine proizvodnje vece ili jednako od 2010
+
+db.polovni_automobili.insertOne({
+		"marka":"Mercedes",
+		"model":"C320",
+		"cena" : 33000,
+		"ccm" : 2200,
+		"godiste": 2021,
+		"stanje":"novo",
+		"kilometraza": 0,
+		"gorivo": "dizel",
+		"snaga": 450,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"crvena"
+	});
+
+db.polovni_automobili.find({marka: /Mercedes.*/,godiste: {$gte: 2010}});
+
+// 4) find naci sve koji imaju manje ili jednako od 1600ccm, dizelase, manje ili jednako cene od 4600evra, neostecen, kilometraze manje od 160000
+
+
+db.polovni_automobili.insertOne(
+{
+		"marka":"Mazda",
+		"model":"3",
+		"cena" : 4300,
+		"ccm" : 1600,
+		"godiste": 2008,
+		"stanje":"polovno",
+		"kilometraza": 155220,
+		"gorivo": "dizel",
+		"snaga": 110,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"ogreban",
+		"boja":"siva"
+	}
+);
+
+db.polovni_automobili.find({ccm: {$lte: 1600}, gorivo:"dizel", cena: {$lte: 4600}, ostecenja:"neostecen", kilometraza:{$lt: 160000}});
+
+
+// 5) update ubaciti u sve mercedese da imaju vebasto 
+
+db.polovni_automobili.find({marka: /Mercedes.*/});
+
+db.polovni_automobili.updateMany({$or: [{marka:"Mercedes Benz"}, {marka:"Mercedes"}]}, {$push: {dodaci: "Vebasto"}});
+
+db.polovni_automobili.find({marka: /Mercedes.*/});
+
+// moze i ovako
+db.polovni_automobili.updateMany({marka:/Mercedes.*/},
+	{$addToSet: {dodaci: {$each: ["Vebasto"]}}});
+	
+// ovako se povlaci vebasto iz skupa dodataka
+db.polovni_automobili.updateMany(
+  {marka:/Mercedes.*/},
+  { $pull: { dodaci: "Vebasto" } } 
+)
+
+// 6) update ubaciti u sve da imaju osnovnu opremu 
+db.polovni_automobili.updateMany({marka:/.*.*/},
+	{$addToSet: {dodaci: {$each: [
+"Airbag za vozača"       ,
+"Airbag za suvozača"     ,
+"Bočni airbag"           ,
+"Child lock"             ,
+"ABS"                    ,
+"Kodiran ključ"          ,
+"Blokada motora"         ,
+"Centralno zaključavanje"
+]}}});
+
+db.polovni_automobili.find();
+
+// 7 delete obrisati sve koji imaju zelenu boju i iznad 2000 kubika
+		
+// provera koji ispunjavaju uslove
+db.polovni_automobili.find({boja:"zelena",ccm: {$gt: 2000}});
+
+// brisanje 
+db.polovni_automobili.deleteMany({boja:"zelena",ccm: {$gt: 2000}});
+
+// ponovna provera 
+db.polovni_automobili.find({boja:"zelena",ccm: {$gt: 2000}});
+
+// 8 delete obrisati sve koji imaju 4 vrata marke maserati boja crvena
+
+
+// provera koliko maseratija imamo
+db.polovni_automobili.find(
+{
+	marka: "Maserati"
+}
+);
+
+
+db.polovni_automobili.deleteMany(
+{
+	marka: "Maserati",
+	"broj sedista": 4,
+	boja: "crvena"
+}
+);
+
+// ponovna provera posle brisanja 
+db.polovni_automobili.find(
+{
+	marka: "Maserati"
+}
+);
+
+// 9 delete obrisati sve koji nisu novi, ispod 2200 kubika, sa 5 sedista
+
+// provera i stavljanje automobila u niz za kasnije cuvanje
+
+
+var niz = db.polovni_automobili.find({stanje: {$nin: ["novo"]}, ccm:{$lt: 2200}, "broj sedista": 5});
+db.polovni_automobili.find({stanje: {$nin: ["novo"]}, ccm:{$lt: 2200}, "broj sedista": 5});
+
+db.polovni_automobili.deleteMany({stanje: {$nin: ["novo"]}, ccm:{$lt: 2200}, "broj sedista": 5});
+	
+// ponovna provera 
+db.polovni_automobili.find({stanje: {$nin: ["novo"]}, ccm:{$lt: 2200}, "broj sedista": 5});
+
+db.polovni_automobili.find();
+
+// 10 find prikazati sve automobile koji nisu niti marke mercedes, niti maserati, i imaju 2200 kubika 
+
+db.polovni_automobili.find({marka:{$nin:["Maserati",/Mercedes.*/]}, ccm: 2200});
+
+db.polovni_automobili.find();
+
+// 11 find prikazati sve automobile koji nemaju vebasto, i nisu BMW, sortirati po godini proizvodnje asc
+
+// ubacivanje novog automobila 
+db.polovni_automobili.insertOne(
+{
+		"marka":"Peugeot",
+		"model":"208gt",
+		"cena" : 5000,
+		"ccm" : 2000,
+		"godiste": 2010,
+		"stanje":"polovno",
+		"kilometraza": 20000,
+		"gorivo": "dizel",
+		"snaga": 200,
+		"broj vrata": "4/5",
+		"broj sedista": 5,
+		"ostecenja":"neostecen",
+		"boja":"zelena"
+	}
+);
+
+// provera imamo samo jedan maserati 
+db.polovni_automobili.find();
+
+db.polovni_automobili.find({dodaci: {$nin: ["Vebasto"]}, marka: {$ne: "BMW"}}).sort({godiste:1});
+
+// 12 find prikazati sve automobile sortirane po godini proizvodnje asc, a po kubikazi desc 
+db.polovni_automobili.find({}).sort({godiste:1, ccm: -1});
+// kod bmw-a se vidi to sortiranje 
+// i kod peugeot-a
+
+// 13 find prikazati sve automobile koji nemaju vebasto samo im prikazati
+// marka, model, cena, ccm, godiste, stanje, kilometraza, gorivo, snaga
+// broj sedista, ostecenja i ne _id
+db.polovni_automobili.find({dodaci: {$not:/.*Vebasto.*/}},
+	{_id:0, marka: 1, model: 1, cena: 1, ccm: 1, godiste: 1, stanje: 1, kilometraza: 1, gorivo: 1, snaga: 1});

@@ -1,0 +1,287 @@
+mongoimport --type csv -d kurirska_sluzba -c korisnici --headerline "C:\fax\baze\domaci\vezbe 2022\MongoDB3\korisnici.csv"
+
+mongoimport --type csv -d kurirska_sluzba -c porudzbine --headerline "C:\fax\baze\domaci\vezbe 2022\MongoDB3\porudzbine.csv"
+
+mongoimport --type csv -d kurirska_sluzba -c artikli --headerline "C:\fax\baze\domaci\vezbe 2022\MongoDB3\artikli.csv"
+
+use kurirska_sluzba;
+
+// ovi inserts nisu potrebni jer import dobro rade 
+// preskociti do prvog sledeceg komentara
+
+db.korisnici.insertMany([
+	{
+		id_korisnika: 1,
+		ime_prezime: "Slobodan Stankovic",
+		telefon: 0659695444,
+		email: "slobodan.stankovic@pmf.edu.rs",
+		adresa_dostave: "ul. Svetozara Krstica 11",
+		grad: "Leskovac",
+		postanski_broj: 16000,
+	},
+	{
+		id_korisnika: 2,
+		ime_prezime: "Laza Lazic",
+		telefon: 0677765432,
+		email: "laza.lazic@pmf.edu.rs",
+		adresa_dostave: "ul. Milutina Milankovica 1",
+		grad: "Nis",
+		postanski_broj: 18000,
+	},
+	{
+		id_korisnika: 3,
+		ime_prezime: "Pera Peric",
+		telefon: 0641234567,
+		email: "pera.peric@pmf.edu.rs",
+		adresa_dostave: "ul. Dzordza Vasingtona 16",
+		grad: "Beograd",
+		postanski_broj: 11000,
+	}
+]);
+db.porudzbine.insertOne(
+	{
+		id_korisnika: 1,
+		opis_statusa: "u magacinu",
+		naziv_placanja: "prilikom preuzimanja",
+		cena_dostave: 500,
+		datum_preuzimanja_kurira: new Date(),
+		datum_prispeca_u_grad_destinacije: new Date(),
+		id_artikli: 1
+	}
+);
+db.porudzbine.insertMany([
+	{
+		id_korisnika: 1,
+		opis_statusa: "u magacinu",
+		naziv_placanja: "placeno karticom",
+		cena_dostave: 300,
+		datum_preuzimanja_kurira: new Date(),
+		datum_prispeca_u_grad_destinacije: new Date(),
+		id_artikli: 4
+	},
+	{
+		id_korisnika: 2,
+		opis_statusa: "u magacinu",
+		naziv_placanja: "placeno karticom",
+		cena_dostave: 300,
+		datum_preuzimanja_kurira:  new Date(),
+		datum_prispeca_u_grad_destinacije:  new Date(),
+		id_artikli: 2
+	},
+	{
+		id_korisnika: 3,
+		opis_statusa: "u magacinu",
+		naziv_placanja: "prilikom preuzimanja",
+		cena_dostave: 300,
+		datum_preuzimanja_kurira:  new Date(),
+		datum_prispeca_u_grad_destinacije:  new Date(),
+		id_artikli: 3
+	}
+]);
+
+db.artikli.insertMany([
+	{
+		id_artikli: 1,
+		naziv_artikla: "Nike Patike",
+		putanja_do_slika: "../slike/nike_patike.jpg",
+		cena: 3500
+	},
+	{
+		id_artikli: 1,
+		naziv_artikla: "Naocare za sunce",
+		putanja_do_slika: "../slike/naocare za sunce.jpg",
+		cena: 1500,
+	},
+	{
+		id_artikli: 2,
+		naziv_artikla: "Mis Gaming HyperX Dart",
+		putanja_do_slika: "../slike/hyperX Dart.jpg",
+		cena: 7999,
+	},
+	{
+		id_artikli: 3,
+		naziv_artikla: "Slusalice Razer Kraken",
+		putanja_do_slika: "../slike/Razer Kraken.jpg",
+		cena: 6699,
+	},
+	{
+		id_artikli: 4,
+		naziv_artikla: "Slusalice Razer Kraken",
+		putanja_do_slika: "../slike/Razer Kraken.jpg",
+		cena: 6699,
+	}
+]);
+
+// 1) Prikazati sve porudzbine svakog korisnika sa
+// ime_prezime, telefon, email, adresa_dostave, grad, postanski_broj,
+// redni_br_paketa, naziv_artikla, cena_dostave i cena_paketa i ukupna,
+
+var artikliLookup = {
+	$lookup: {
+			from: "artikli",
+			localField: "id_artikli",
+			foreignField: "id_artikli",
+			as: "artikal"
+		}
+};
+
+var korisniciLookup = {
+	$lookup: {
+			from: "korisnici",
+			localField: "id_korisnika",
+			foreignField: "id_korisnika",
+			as: "korisnik"
+		}
+};
+
+var projectImportantInfo = {
+	$project: {
+				ime_prezime: 	{$first: "$korisnik.ime_prezime"},
+				adresa_dostave: {$first: "$korisnik.adresa_dostave"},
+				telefon: 		{$first: "$korisnik.telefon"},
+				email: 			{$first:"$korisnik.email"},
+				grad: 			{$first: "$korisnik.grad"},
+				postanski_broj: {$first: "$korisnik.postanski_broj"},
+				naziv_artikla: 	{$first: "$artikal.naziv_artikla"},
+				datum_prispeca_u_grad_destinacije: { $toDate: "$datum_prispeca_u_grad_destinacije"},
+				naziv_placanja: "$naziv_placanja",
+				cena_dostave: 	"$cena_dostave",
+				cena_paketa: 	{$first: "$artikal.cena"}
+			}
+};
+
+db.porudzbine.aggregate(
+	[
+		artikliLookup,
+		korisniciLookup,
+		projectImportantInfo,
+	{
+			$addFields: {"ukupna_cena": {$add: [{$sum:["$cena_dostave","$cena_paketa"]}]}},
+			
+	},
+	{
+		$project: {
+			_id: 0
+		}
+	}
+	]
+ );
+
+// 2) Naci sve artikle koji se dostavljaju u sledeca 24 sata i dva sata pre trenutnog vremena 
+// za grad Nis 
+
+db.porudzbine.aggregate(
+	[
+		artikliLookup,
+		korisniciLookup,
+		projectImportantInfo,
+		{
+			$match: {
+					"grad": {
+						$eq: "Nis"
+					},
+					"datum_prispeca_u_grad_destinacije": {
+						$gte: new Date(ISODate().getTime() - 1000 * 3600 * 2),
+						$lte: new Date(ISODate().getTime() + 1000 * 3600 * 24)
+					}
+			}
+		}
+	]
+);
+
+// 3) prikazati paket koji treba prvi da se preda
+
+db.porudzbine.aggregate(
+	[
+		artikliLookup,
+		korisniciLookup,
+		projectImportantInfo,
+		{
+			$sort: {"datum_prispeca_u_grad_destinacije": 1}
+		},
+		{
+			$limit: 1
+		}
+	]
+);
+
+// 4) prikazati paket koji najvise kosta iz grada Leskovac
+
+db.porudzbine.aggregate(
+	[
+		artikliLookup,
+		korisniciLookup,
+		projectImportantInfo,
+		{
+			$addFields: {"ukupna_cena": {$add: [{$sum:["$cena_dostave","$cena_paketa"]}]}}
+			
+		},
+		{
+			$match: {
+				grad: "Leskovac"
+			}
+		},
+		{
+			$sort: {"ukupna_cena": -1}
+		},
+		{
+			$limit: 1
+		}
+	]
+);
+
+// 5) prikazati pakete koji sadrze razer u imenu 
+
+db.porudzbine.aggregate(
+	[
+		artikliLookup,
+		korisniciLookup,
+		projectImportantInfo,
+	{
+			$addFields: {"ukupna_cena": {$add: [{$sum:["$cena_dostave","$cena_paketa"]}]}},
+			
+	},
+	{
+		$project: {
+			_id: 0
+		}
+	},
+	{
+		$match: {
+			 "naziv_artikla": /.*Razer.*/ 
+		}
+	}
+	]
+ );
+
+// 6) prikazati grad u koji ide najvise paketa
+
+
+db.porudzbine.aggregate(
+	[
+		artikliLookup,
+		korisniciLookup,
+		projectImportantInfo,
+		{
+			$group: {
+				_id: {
+					grad: "$grad"
+				},
+				counter: {$sum: 1}
+			}
+		},
+		{
+			$sort: {counter: -1}
+		},
+		{
+			$limit: 1
+		},
+		{
+			$project: {
+				grad: "$_id.grad",
+				_id: 0
+			}
+		}
+	]
+);
+

@@ -1,0 +1,6 @@
+id_korisnika,opis_statusa,naziv_placanja,cena_dostave,datum_preuzimanja_kurira,datum_prispeca_u_grad_destinacije,id_artikli
+1,u magacinu,prilikom preuzimanja,500,2022-02-01 23:00:00.000Z,2022-02-02 23:00:00.000Z,1
+1,u magacinu,placeno karticom,300,2022-01-31 23:00:00.000Z,2022-02-01 23:00:00.000Z,4
+2,u magacinu,placeno karticom,300,2022-01-31 23:00:00.000Z,2022-02-04 23:00:00.000Z,2
+3,u magacinu,prilikom preuzimanja,300,2022-02-01 23:00:00.000Z,2022-02-02 23:00:00.000Z,3
+4,preuzet,prilikom preuzimanja,500,2022-02-01 23:00:00.000Z,2022-02-01 23:00:00.000Z,5

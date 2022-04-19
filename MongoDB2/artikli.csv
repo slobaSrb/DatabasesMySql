@@ -1,0 +1,7 @@
+id_artikli,naziv_artikla,putanja_do_slika,cena
+1,Nike Patike,"""../slike/nike_patike.jpg""",3500
+1,Naocare za sunce,"""../slike/naocare za sunce.jpg""",1500
+2,Mis Gaming HyperX Dart,"""../slike/hyperX Dart.jpg""",7999
+3,Slusalice Razer Kraken,"""../slike/Razer Kraken.jpg""",6699
+4,Slusalice Razer Kraken,"""../slike/Razer Kraken.jpg""",6699
+5,Laptop Asus Tuf,"""../slike/Asus tuf.jpg""", 169999

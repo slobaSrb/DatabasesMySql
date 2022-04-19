@@ -1,0 +1,5 @@
+id_korisnika,ime_prezime,telefon,email,adresa_dostave,grad,postanski_broj
+1,Slobodan Stankovic,"0659695444",slobodan.stankovic@pmf.edu.rs,ul. Svetozara Krstica 11,Leskovac,16000
+2,Laza Lazic,"0677765432",laza.lazic@pmf.edu.rs,ul. Milutina Milankovica 1,Nis,18000
+3,Pera Peric,"0641234567",pera.peric@pmf.edu.rs,ul. Dzordza Vasingtona 16,Beograd,11000
+4,Nikola Nikolic,"0669876543",nikola.nikolic@pmf.edu.rs,ul. Milutina Smiljkovica 15,Leskovac,16000
